@@ -55,7 +55,13 @@ app.on('activate', () => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
 const server = 'http://192.168.90.25:8080'
-const url = `${server}/update/windows_64/${app.getVersion()}`
+const getPlatform = () => {
+  const processPlatform = process.platform
+  if(processPlatform.includes('win')) return 'windows_64'
+  if(processPlatform.includes('linux')) return 'linux_64'
+  if(processPlatform.includes('darwin')) return 'osx_64'
+}
+const url = `${server}/update/${getPlatform()}/${app.getVersion()}`
 if (app.isPackaged) {
   //only check for auto updates if the app is packaged
   console.log(`update url: ${url}`)
