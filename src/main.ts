@@ -57,9 +57,10 @@ app.on('activate', () => {
 const server = 'http://192.168.90.25:8080'
 const getPlatform = () => {
   const processPlatform = process.platform
-  if(processPlatform.includes('win')) return 'windows_64'
-  if(processPlatform.includes('linux')) return 'linux_64'
-  if(processPlatform.includes('darwin')) return 'osx_64'
+  if (processPlatform === 'darwin') return 'osx_64'
+  if (processPlatform.includes('win')) return 'windows_64'
+  if (processPlatform.includes('linux')) return 'linux_64'
+
 }
 const url = `${server}/update/${getPlatform()}/${app.getVersion()}`
 if (app.isPackaged) {
