@@ -1,6 +1,6 @@
-import {app, BrowserWindow, autoUpdater, dialog, ipcMain} from 'electron';
+import { app, BrowserWindow, autoUpdater, dialog, ipcMain } from 'electron';
 import path from 'path';
-
+import si from 'systeminformation';
 console.log(`is app packaged: ${app.isPackaged}`);
 console.log(`app version: ${app.getVersion()}`);
 console.log(`platform: ${process.platform}`);
@@ -54,47 +54,50 @@ app.on('activate', () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
+const server = 'http://192.168.90.25:8080'
+const url = `${server}/update/windows_64/${app.getVersion()}`
+if (app.isPackaged) {
+  //only check for auto updates if the app is packaged
+  console.log(`update url: ${url}`)
+  autoUpdater.setFeedURL({ url })
+  //check for updates
+  setInterval(() => {
+    // console.log('checking for updates')
+    autoUpdater.checkForUpdates()
+  }, 1000 * 60) //every 1 second
 
-const server = 'https://electron-release-server.fcs.ninja'
-const url = `${server}/update/${process.platform}/${app.getVersion()}`
-console.log(`update url: ${url}`)
-autoUpdater.setFeedURL({url})
-//check for updates
-setInterval(() => {
-  // console.log('checking for updates')
-  autoUpdater.checkForUpdates()
-}, 1000) //every 1 second
+  //notify user when update is available
+  autoUpdater.on('update-downloaded', (event, releaseNotes, releaseName) => {
+    console.log('A new update is ready to install', `Version ${releaseName} is downloaded and will be automatically installed on Quit`)
+    const dialogOpts = {
+      type: 'info',
+      buttons: ['Restart', 'Later'],
+      title: 'Application Update',
+      message: process.platform === 'win32' ? releaseNotes : releaseName,
+      detail:
+        'A new version has been downloaded. Restart the application to apply the updates.'
+    }
 
-//notify user when update is available
-autoUpdater.on('update-downloaded', (event, releaseNotes, releaseName) => {
-  console.log('A new update is ready to install', `Version ${releaseName} is downloaded and will be automatically installed on Quit`)
-  const dialogOpts = {
-    type: 'info',
-    buttons: ['Restart', 'Later'],
-    title: 'Application Update',
-    message: process.platform === 'win32' ? releaseNotes : releaseName,
-    detail:
-      'A new version has been downloaded. Restart the application to apply the updates.'
-  }
-
-  dialog.showMessageBox(dialogOpts).then((returnValue) => {
-    if (returnValue.response === 0) autoUpdater.quitAndInstall()
+    dialog.showMessageBox(dialogOpts).then((returnValue) => {
+      if (returnValue.response === 0) autoUpdater.quitAndInstall()
+    })
   })
-})
 
-autoUpdater.on('error', (message) => {
-  console.error('There was a problem updating the application')
-  console.error(message)
-  dialog.showErrorBox('Error: ', message == null ? "unknown" : (message as any).toString())
-})
+  autoUpdater.on('error', (message) => {
+    console.error('There was a problem updating the application')
+    console.error(message)
+  })
+}
 
 //send app version to renderer
-ipcMain.handle('get-app-info', (event, ...args) => {
+ipcMain.handle('get-app-info', async (event, ...args) => {
+  const systemInf = await si.osInfo();
   return {
     version: app.getVersion(),
     platform: process.platform,
     isPackaged: app.isPackaged,
-    updaterUrl: url
+    updaterUrl: url,
+    systemInf
 
   }
 })

@@ -51,7 +51,7 @@ const config: ForgeConfig = {
     {
       name: '@electron-forge/publisher-electron-release-server',
       config: {
-        baseUrl: 'https://electron-release-server.fcs.ninja',
+        baseUrl: 'http://192.168.90.25:8080',
         username: 'admin@fcs.ninja',
         password: 'abcD!234'
       }
